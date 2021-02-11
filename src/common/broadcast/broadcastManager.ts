@@ -1,9 +1,8 @@
+import { ConnectionEvent, ConnectionStatus, DolphinConnection, Ports } from "@slippi/slippi-js";
 import log from "electron-log";
-import { connection, client as WebSocketClient } from "websocket";
-import _ from "lodash";
 import firebase from "firebase";
-
-import { DolphinConnection, Ports, ConnectionEvent, ConnectionStatus } from "@slippi/slippi-js";
+import _ from "lodash";
+import { client as WebSocketClient, connection } from "websocket";
 // import { store } from '../index';
 // import { setDolphinStatus, setSlippiStatus } from '../actions/broadcast';
 // import { displayError } from '../actions/error';
@@ -94,7 +93,7 @@ export class BroadcastManager {
       disableNagleAlgorithm: false,
     } as any);
 
-    socket.on("connectFailed", (error) => {
+    socket.on("connectFailed", (error: any) => {
       log.error("[Broadcast] WS failed to connect\n", error);
 
       const label = "x-websocket-reject-reason: ";
@@ -110,7 +109,7 @@ export class BroadcastManager {
       // store.dispatch(errorAction);
     });
 
-    socket.on("connect", (connection) => {
+    socket.on("connect", (connection: any) => {
       log.info("[Broadcast] WS connection successful");
       this.wsConnection = connection;
 
@@ -152,13 +151,13 @@ export class BroadcastManager {
         this.dolphinConnection.connect("127.0.0.1", Ports.DEFAULT);
       }
 
-      connection.on("error", (err) => {
+      connection.on("error", (err: any) => {
         log.error("[Broadcast] WS connection error encountered\n", err);
         // const errorAction = displayError("broadcast-global", err.message);
         // store.dispatch(errorAction);
       });
 
-      connection.on("close", (code, reason) => {
+      connection.on("close", (code: any, reason: any) => {
         log.info(`[Broadcast] WS connection closed: ${code}, ${reason}`);
         // store.dispatch(setSlippiStatus(ConnectionStatus.DISCONNECTED));
 
@@ -175,7 +174,7 @@ export class BroadcastManager {
         }
       });
 
-      connection.on("message", (message) => {
+      connection.on("message", (message: any) => {
         // Ensure we have proper message data
         if (message.type !== "utf8" || !message.utf8Data) {
           return;
@@ -224,7 +223,7 @@ export class BroadcastManager {
 
             connectionComplete(obj.broadcastId);
             break;
-          case "get-broadcasts-resp":
+          case "get-broadcasts-resp": {
             const broadcasts = obj.broadcasts || [];
 
             // Grab broadcastId we were currently using if the broadcast still exists, would happen
@@ -243,9 +242,11 @@ export class BroadcastManager {
 
             startBroadcast(this.broadcastId ?? target);
             break;
-          default:
+          }
+          default: {
             log.error(`[Broadcast] Ws resp type ${obj.type} not supported`);
             break;
+          }
         }
       });
 
@@ -311,7 +312,7 @@ export class BroadcastManager {
         // Only forward these message types to the server
         case "start_game":
         case "game_event":
-        case "end_game":
+        case "end_game": {
           // const payload = event.payload || "";
           // const payloadStart = payload.substring(0, 4);
           // const buf = Buffer.from(payloadStart, 'base64');
@@ -332,7 +333,7 @@ export class BroadcastManager {
             this.nextGameCursor = event["next_cursor"];
           }
 
-          this.wsConnection.sendUTF(JSON.stringify(message), (err) => {
+          this.wsConnection.sendUTF(JSON.stringify(message), (err: any) => {
             if (err) {
               log.error("[Broadcast] WS send error encountered\n", err);
               // return;
@@ -343,8 +344,7 @@ export class BroadcastManager {
             // }
           });
           break;
-        default:
-          break;
+        }
       }
     }
   }
